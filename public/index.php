@@ -104,6 +104,10 @@ $pageRoutes = [
     '/projects/{id}' => 'pages/projects/detail.php',
     '/assets/{id}' => 'pages/assets/detail.php',
     '/tasks' => 'pages/tasks/index.php',
+    '/scheduled-tasks' => 'pages/tasks/scheduled.php',
+    '/failures' => 'pages/tasks/failures.php',
+    '/exports' => 'pages/exports/index.php',
+    '/tags' => 'pages/settings/tags.php',
     '/settings' => 'pages/settings/index.php',
 ];
 
