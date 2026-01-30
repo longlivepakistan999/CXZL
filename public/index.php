@@ -13,12 +13,11 @@ $config = require_once __DIR__ . '/../app/bootstrap.php';
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
-// 移除基础路径(如果有)
-$basePath = dirname($_SERVER['SCRIPT_NAME']);
-if ($basePath !== '/' && strpos($uri, $basePath) === 0) {
-    $uri = substr($uri, strlen($basePath));
+// 规范化URI
+$uri = '/' . trim($uri, '/');
+if ($uri !== '/') {
+    $uri = rtrim($uri, '/');
 }
-$uri = $uri ?: '/';
 
 // API路由
 $apiRoutes = [

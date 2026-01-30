@@ -40,10 +40,15 @@ function setting(string $key, $default = null)
     static $settings = null;
 
     if ($settings === null) {
-        $rows = Database::query("SELECT `key`, `value` FROM `settings`");
-        $settings = [];
-        foreach ($rows as $row) {
-            $settings[$row['key']] = $row['value'];
+        try {
+            $rows = Database::query("SELECT `key`, `value` FROM `settings`");
+            $settings = [];
+            foreach ($rows as $row) {
+                $settings[$row['key']] = $row['value'];
+            }
+        } catch (\Exception $e) {
+            // 数据库未连接或表不存在时返回默认值
+            $settings = [];
         }
     }
 
