@@ -39,6 +39,10 @@
                     <span class="nav-icon">&#8681;</span>
                     <span>导出记录</span>
                 </a>
+                <a href="/components" class="nav-item <?= ($currentPage ?? '') === 'components' ? 'active' : '' ?>">
+                    <span class="nav-icon">&#128268;</span>
+                    <span>组件管理</span>
+                </a>
                 <a href="/tags" class="nav-item <?= ($currentPage ?? '') === 'tags' ? 'active' : '' ?>">
                     <span class="nav-icon">&#9873;</span>
                     <span>标签管理</span>

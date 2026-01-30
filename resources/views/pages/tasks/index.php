@@ -8,6 +8,28 @@ ob_start();
     <div class="loading"><div class="spinner"></div></div>
 </div>
 
+<!-- 批量重扫操作 -->
+<div class="card" style="margin-bottom: 20px;">
+    <div class="card-header" style="padding: 15px 20px; border-bottom: 1px solid var(--border-color);">
+        <strong>批量重扫操作</strong>
+    </div>
+    <div class="filter-bar" style="flex-wrap: wrap; gap: 10px;">
+        <select class="form-control form-select" id="rescan-project" style="width: 200px;">
+            <option value="">全部项目</option>
+        </select>
+        <button class="btn btn-primary" onclick="rescanPending()">扫描未扫描资产</button>
+        <button class="btn btn-warning" onclick="rescanNonWp()">重扫非WP资产</button>
+        <button class="btn btn-danger" onclick="rescanFailed()">重扫失败资产</button>
+        <div class="dropdown" style="display: inline-block;">
+            <button class="btn btn-outline" onclick="toggleDropdown(this)">导出 ▾</button>
+            <div class="dropdown-menu">
+                <a href="#" onclick="exportWpAssets('txt'); return false;">导出WP资产 (TXT)</a>
+                <a href="#" onclick="exportWpAssets('json'); return false;">导出WP资产 (JSON)</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="card">
     <div class="filter-bar">
         <select class="form-control form-select" id="filter-project" onchange="loadTasks()">
@@ -72,11 +94,17 @@ async function loadProjects() {
     try {
         const data = await api.get('/api/projects', { per_page: 1000 });
         const select = document.getElementById('filter-project');
+        const rescanSelect = document.getElementById('rescan-project');
         data.items.forEach(p => {
             const option = document.createElement('option');
             option.value = p.id;
             option.textContent = p.name;
             select.appendChild(option);
+
+            const option2 = document.createElement('option');
+            option2.value = p.id;
+            option2.textContent = p.name;
+            rescanSelect.appendChild(option2);
         });
     } catch (error) {
         console.error(error);
@@ -184,6 +212,58 @@ async function prioritizeTask(id) {
     } catch (error) {
         toast.error(error.message);
     }
+}
+
+async function rescanPending() {
+    const projectId = document.getElementById('rescan-project').value;
+    modal.confirm('确定要扫描所有未扫描的资产吗？', async () => {
+        try {
+            toast.info('正在创建扫描任务...');
+            const result = await api.post('/api/assets/rescan-pending', { project_id: projectId || 0 });
+            toast.success(result.message);
+            loadStats();
+            loadTasks();
+        } catch (error) {
+            toast.error(error.message);
+        }
+    });
+}
+
+async function rescanNonWp() {
+    const projectId = document.getElementById('rescan-project').value;
+    modal.confirm('确定要重扫所有非WP资产吗？这将重新检测这些资产的WP状态。', async () => {
+        try {
+            toast.info('正在创建扫描任务...');
+            const result = await api.post('/api/assets/rescan-non-wp', { project_id: projectId || 0 });
+            toast.success(result.message);
+            loadStats();
+            loadTasks();
+        } catch (error) {
+            toast.error(error.message);
+        }
+    });
+}
+
+async function rescanFailed() {
+    const projectId = document.getElementById('rescan-project').value;
+    modal.confirm('确定要重扫所有失败的资产吗？', async () => {
+        try {
+            toast.info('正在创建扫描任务...');
+            const result = await api.post('/api/assets/rescan-failed', { project_id: projectId || 0 });
+            toast.success(result.message);
+            loadStats();
+            loadTasks();
+        } catch (error) {
+            toast.error(error.message);
+        }
+    });
+}
+
+function exportWpAssets(format) {
+    const projectId = document.getElementById('rescan-project').value;
+    let url = '/api/assets/export-wp?format=' + format;
+    if (projectId) url += '&project_id=' + projectId;
+    window.open(url, '_blank');
 }
 
 // 初始加载

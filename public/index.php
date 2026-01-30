@@ -41,6 +41,10 @@ $apiRoutes = [
     'POST /api/assets/batch-scan' => ['App\\Controllers\\AssetController', 'batchScan'],
     'POST /api/assets/batch-delete' => ['App\\Controllers\\AssetController', 'batchDelete'],
     'POST /api/assets/batch-tag' => ['App\\Controllers\\AssetController', 'batchTag'],
+    'POST /api/assets/rescan-non-wp' => ['App\\Controllers\\AssetController', 'rescanNonWp'],
+    'POST /api/assets/rescan-failed' => ['App\\Controllers\\AssetController', 'rescanFailed'],
+    'POST /api/assets/rescan-pending' => ['App\\Controllers\\AssetController', 'rescanPending'],
+    'GET /api/assets/export-wp' => ['App\\Controllers\\AssetController', 'exportWpAssets'],
 
     // 旁站
     'GET /api/sidesites' => ['App\\Controllers\\SidesiteController', 'index'],
@@ -94,6 +98,14 @@ $apiRoutes = [
     // 仪表盘
     'GET /api/dashboard' => ['App\\Controllers\\DashboardController', 'index'],
     'GET /api/dashboard/stats' => ['App\\Controllers\\DashboardController', 'stats'],
+
+    // 组件管理
+    'GET /api/components' => ['App\\Controllers\\ComponentController', 'index'],
+    'GET /api/components/{component}/assets' => ['App\\Controllers\\ComponentController', 'assets'],
+    'GET /api/components/{component}/sidesites' => ['App\\Controllers\\ComponentController', 'sidesites'],
+    'GET /api/components/{component}/export-assets' => ['App\\Controllers\\ComponentController', 'exportAssets'],
+    'GET /api/components/{component}/export-sidesites' => ['App\\Controllers\\ComponentController', 'exportSidesites'],
+    'POST /api/components/refresh' => ['App\\Controllers\\ComponentController', 'refresh'],
 ];
 
 // 页面路由
@@ -107,6 +119,7 @@ $pageRoutes = [
     '/scheduled-tasks' => 'pages/tasks/scheduled.php',
     '/failures' => 'pages/tasks/failures.php',
     '/exports' => 'pages/exports/index.php',
+    '/components' => 'pages/components/index.php',
     '/tags' => 'pages/settings/tags.php',
     '/settings' => 'pages/settings/index.php',
 ];

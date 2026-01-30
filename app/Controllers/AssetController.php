@@ -388,4 +388,137 @@ class AssetController extends BaseController
 
         success(['updated' => $updated], "已更新 {$updated} 个资产的标签");
     }
+
+    /**
+     * 重扫非WP资产
+     */
+    public function rescanNonWp(): void
+    {
+        $projectId = inputInt('project_id');
+        $scanType = inputInt('scan_type', ScanTask::TYPE_RESCAN);
+        $priority = inputInt('priority', ScanTask::PRIORITY_NORMAL);
+
+        $filters = ['is_wp' => 0];
+        if ($projectId) {
+            $filters['project_id'] = $projectId;
+        }
+
+        $assets = Asset::getList($filters, 1, 100000);
+
+        if (empty($assets)) {
+            error('没有符合条件的非WP资产');
+        }
+
+        // 获取第一个资产的项目ID作为批量任务的项目ID
+        $batchProjectId = $projectId ?: ($assets[0]['project_id'] ?? 0);
+
+        $taskCount = ScanTask::batchCreate($batchProjectId, $assets, $scanType, $priority);
+
+        success([
+            'task_count' => $taskCount,
+            'asset_count' => count($assets),
+        ], "已创建 {$taskCount} 个扫描任务 (非WP资产)");
+    }
+
+    /**
+     * 重扫失败资产
+     */
+    public function rescanFailed(): void
+    {
+        $projectId = inputInt('project_id');
+        $scanType = inputInt('scan_type', ScanTask::TYPE_RESCAN);
+        $priority = inputInt('priority', ScanTask::PRIORITY_NORMAL);
+
+        // scan_status: 0=未扫描, 1=成功, 2=失败
+        $filters = ['scan_status' => 2];
+        if ($projectId) {
+            $filters['project_id'] = $projectId;
+        }
+
+        $assets = Asset::getList($filters, 1, 100000);
+
+        if (empty($assets)) {
+            error('没有符合条件的失败资产');
+        }
+
+        // 获取第一个资产的项目ID作为批量任务的项目ID
+        $batchProjectId = $projectId ?: ($assets[0]['project_id'] ?? 0);
+
+        $taskCount = ScanTask::batchCreate($batchProjectId, $assets, $scanType, $priority);
+
+        success([
+            'task_count' => $taskCount,
+            'asset_count' => count($assets),
+        ], "已创建 {$taskCount} 个扫描任务 (失败资产)");
+    }
+
+    /**
+     * 重扫未扫描资产
+     */
+    public function rescanPending(): void
+    {
+        $projectId = inputInt('project_id');
+        $scanType = inputInt('scan_type', ScanTask::TYPE_FIRST_SCAN);
+        $priority = inputInt('priority', ScanTask::PRIORITY_NORMAL);
+
+        // scan_status: 0=未扫描
+        $filters = ['scan_status' => 0];
+        if ($projectId) {
+            $filters['project_id'] = $projectId;
+        }
+
+        $assets = Asset::getList($filters, 1, 100000);
+
+        if (empty($assets)) {
+            error('没有符合条件的未扫描资产');
+        }
+
+        $batchProjectId = $projectId ?: ($assets[0]['project_id'] ?? 0);
+
+        $taskCount = ScanTask::batchCreate($batchProjectId, $assets, $scanType, $priority);
+
+        success([
+            'task_count' => $taskCount,
+            'asset_count' => count($assets),
+        ], "已创建 {$taskCount} 个扫描任务 (未扫描资产)");
+    }
+
+    /**
+     * 导出WP资产域名
+     */
+    public function exportWpAssets(): void
+    {
+        $projectId = inputInt('project_id');
+        $format = input('format', 'txt');
+
+        $params = [];
+        $whereParts = ['is_wp = 1'];
+
+        if ($projectId) {
+            $whereParts[] = "project_id = ?";
+            $params[] = $projectId;
+        }
+
+        $whereClause = 'WHERE ' . implode(' AND ', $whereParts);
+
+        $domains = \App\Helpers\Database::query(
+            "SELECT domain FROM assets {$whereClause}",
+            $params
+        );
+
+        $domainList = array_column($domains, 'domain');
+
+        $filename = 'wp_assets_' . date('YmdHis');
+
+        if ($format === 'json') {
+            header('Content-Type: application/json');
+            header("Content-Disposition: attachment; filename=\"{$filename}.json\"");
+            echo json_encode($domainList, JSON_UNESCAPED_UNICODE);
+        } else {
+            header('Content-Type: text/plain');
+            header("Content-Disposition: attachment; filename=\"{$filename}.txt\"");
+            echo implode("\n", $domainList);
+        }
+        exit;
+    }
 }
