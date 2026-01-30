@@ -29,6 +29,7 @@ class ViewDnsService
         self::init();
 
         if (empty(self::$apiKey)) {
+            logError("ViewDNS API Key未配置");
             return [
                 'success' => false,
                 'domains' => [],
@@ -45,9 +46,12 @@ class ViewDnsService
             urlencode(self::$apiKey)
         );
 
+        logInfo("ViewDNS API请求: {$ip}");
+
         $response = static::httpGet($url);
 
         if ($response === false) {
+            logError("ViewDNS网络请求失败: {$ip}");
             return [
                 'success' => false,
                 'domains' => [],
@@ -58,6 +62,7 @@ class ViewDnsService
         $data = json_decode($response, true);
 
         if (!$data) {
+            logError("ViewDNS JSON解析失败: {$ip}", ['response' => substr($response, 0, 500)]);
             return [
                 'success' => false,
                 'domains' => [],
@@ -67,6 +72,7 @@ class ViewDnsService
 
         // 检查API响应状态
         if (isset($data['response']['error'])) {
+            logError("ViewDNS API错误: {$ip}", ['error' => $data['response']['error']]);
             return [
                 'success' => false,
                 'domains' => [],
@@ -87,10 +93,13 @@ class ViewDnsService
             }
         }
 
+        $uniqueDomains = array_unique($domains);
+        logInfo("ViewDNS查询成功: {$ip}", ['域名数' => count($uniqueDomains)]);
+
         return [
             'success' => true,
-            'domains' => array_unique($domains),
-            'count' => count($domains),
+            'domains' => $uniqueDomains,
+            'count' => count($uniqueDomains),
             'error' => null,
         ];
     }

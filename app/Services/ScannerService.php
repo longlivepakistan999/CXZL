@@ -45,9 +45,11 @@ class ScannerService
 
             // 2. CF检测
             $result['is_cf'] = CloudflareService::isCloudflare($dnsResult['ip']);
+            logInfo("CF检测: {$asset['domain']}", ['ip' => $dnsResult['ip'], 'is_cf' => $result['is_cf']]);
 
             // 3. 如果非CF,查询旁站
             if (!$result['is_cf']) {
+                logInfo("开始查询旁站: {$asset['domain']}", ['ip' => $dnsResult['ip']]);
                 $sidesiteResult = ViewDnsService::reverseLookup($dnsResult['ip']);
 
                 if ($sidesiteResult['success'] && !empty($sidesiteResult['domains'])) {
