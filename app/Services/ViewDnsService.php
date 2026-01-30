@@ -7,7 +7,7 @@ namespace App\Services;
 class ViewDnsService
 {
     private static ?string $apiKey = null;
-    private static int $lastRequestTime = 0;
+    private static float $lastRequestTime = 0;
     private static int $rateLimit = 10; // 默认每秒10次
 
     /**
