@@ -76,19 +76,48 @@ class SidesiteController extends BaseController
             [$projectId]
         );
 
-        // 组件统计
-        $components = Database::query(
-            "SELECT
-                j.component as name,
-                COUNT(*) as count
-            FROM sidesites s,
-            JSON_TABLE(s.components, '\$[*]' COLUMNS (component VARCHAR(100) PATH '\$')) j
-            WHERE s.project_id = ? AND s.is_wp = 1 AND s.components IS NOT NULL
-            GROUP BY j.component
-            ORDER BY count DESC
-            LIMIT 50",
-            [$projectId]
-        );
+        // 组件统计 - 兼容 MySQL 5.7 和 8.0
+        $components = [];
+        try {
+            // 尝试 MySQL 8.0+ 的 JSON_TABLE
+            $components = Database::query(
+                "SELECT
+                    j.component as name,
+                    COUNT(*) as count
+                FROM sidesites s,
+                JSON_TABLE(s.components, '\$[*]' COLUMNS (component VARCHAR(100) PATH '\$')) j
+                WHERE s.project_id = ? AND s.is_wp = 1 AND s.components IS NOT NULL
+                GROUP BY j.component
+                ORDER BY count DESC
+                LIMIT 50",
+                [$projectId]
+            );
+        } catch (\Exception $e) {
+            // MySQL 5.7 回退方案：手动解析 JSON
+            $wpSidesites = Database::query(
+                "SELECT components FROM sidesites WHERE project_id = ? AND is_wp = 1 AND components IS NOT NULL",
+                [$projectId]
+            );
+
+            $componentCounts = [];
+            foreach ($wpSidesites as $row) {
+                $comps = json_decode($row['components'], true);
+                if (is_array($comps)) {
+                    foreach ($comps as $comp) {
+                        if (!isset($componentCounts[$comp])) {
+                            $componentCounts[$comp] = 0;
+                        }
+                        $componentCounts[$comp]++;
+                    }
+                }
+            }
+
+            arsort($componentCounts);
+            $components = [];
+            foreach (array_slice($componentCounts, 0, 50, true) as $name => $count) {
+                $components[] = ['name' => $name, 'count' => $count];
+            }
+        }
 
         // 添加插件名称映射
         $pluginMap = \App\Services\WordPressService::getCommonPluginNamespaces();
@@ -122,19 +151,48 @@ class SidesiteController extends BaseController
             [$assetId]
         );
 
-        // 组件统计
-        $components = Database::query(
-            "SELECT
-                j.component as name,
-                COUNT(*) as count
-            FROM sidesites s,
-            JSON_TABLE(s.components, '\$[*]' COLUMNS (component VARCHAR(100) PATH '\$')) j
-            WHERE s.asset_id = ? AND s.is_wp = 1 AND s.components IS NOT NULL
-            GROUP BY j.component
-            ORDER BY count DESC
-            LIMIT 50",
-            [$assetId]
-        );
+        // 组件统计 - 兼容 MySQL 5.7 和 8.0
+        $components = [];
+        try {
+            // 尝试 MySQL 8.0+ 的 JSON_TABLE
+            $components = Database::query(
+                "SELECT
+                    j.component as name,
+                    COUNT(*) as count
+                FROM sidesites s,
+                JSON_TABLE(s.components, '\$[*]' COLUMNS (component VARCHAR(100) PATH '\$')) j
+                WHERE s.asset_id = ? AND s.is_wp = 1 AND s.components IS NOT NULL
+                GROUP BY j.component
+                ORDER BY count DESC
+                LIMIT 50",
+                [$assetId]
+            );
+        } catch (\Exception $e) {
+            // MySQL 5.7 回退方案：手动解析 JSON
+            $wpSidesites = Database::query(
+                "SELECT components FROM sidesites WHERE asset_id = ? AND is_wp = 1 AND components IS NOT NULL",
+                [$assetId]
+            );
+
+            $componentCounts = [];
+            foreach ($wpSidesites as $row) {
+                $comps = json_decode($row['components'], true);
+                if (is_array($comps)) {
+                    foreach ($comps as $comp) {
+                        if (!isset($componentCounts[$comp])) {
+                            $componentCounts[$comp] = 0;
+                        }
+                        $componentCounts[$comp]++;
+                    }
+                }
+            }
+
+            arsort($componentCounts);
+            $components = [];
+            foreach (array_slice($componentCounts, 0, 50, true) as $name => $count) {
+                $components[] = ['name' => $name, 'count' => $count];
+            }
+        }
 
         // 添加插件名称映射
         $pluginMap = \App\Services\WordPressService::getCommonPluginNamespaces();
