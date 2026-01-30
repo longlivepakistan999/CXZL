@@ -99,6 +99,7 @@ function renderProjectList(projects) {
                         <td>
                             <div class="table-actions">
                                 <a href="/projects/${p.id}" class="btn btn-sm btn-outline">进入</a>
+                                <button class="btn btn-sm btn-outline" onclick="showSidesitesModal(${p.id}, '${p.name}')" ${p.sidesite_count > 0 ? '' : 'disabled'}>旁站</button>
                                 <button class="btn btn-sm btn-outline" onclick="showEditModal(${p.id})">编辑</button>
                                 <button class="btn btn-sm btn-primary" onclick="scanProject(${p.id})">扫描</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteProject(${p.id})">删除</button>
@@ -288,6 +289,182 @@ function batchDelete() {
         selectedIds = [];
         loadProjects(currentPage);
     });
+}
+
+// 旁站弹窗
+let currentSidesiteProjectId = null;
+let sidesitePage = 1;
+let sidesiteFilter = 'all';
+
+async function showSidesitesModal(projectId, projectName) {
+    currentSidesiteProjectId = projectId;
+    sidesitePage = 1;
+    sidesiteFilter = 'all';
+
+    try {
+        const stats = await api.get('/api/sidesites/project/' + projectId + '/stats');
+
+        modal.open({
+            title: `旁站管理 - ${projectName}`,
+            width: '900px',
+            content: `
+                <div class="stats-grid" style="margin-bottom: 16px;">
+                    <div class="stat-card">
+                        <div class="stat-value">${formatNumber(stats.total)}</div>
+                        <div class="stat-label">总旁站</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-value">${formatNumber(stats.wp_count)}</div>
+                        <div class="stat-label">WP旁站</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-value">${formatNumber(stats.non_wp_count)}</div>
+                        <div class="stat-label">非WP旁站</div>
+                    </div>
+                    <div class="stat-card gray">
+                        <div class="stat-value">${formatNumber(stats.unknown_count)}</div>
+                        <div class="stat-label">未检测</div>
+                    </div>
+                </div>
+
+                <div class="filter-bar" style="margin-bottom: 16px;">
+                    <select class="form-control form-select" id="sidesite-filter" onchange="filterSidesites()" style="width: 150px;">
+                        <option value="all">全部旁站</option>
+                        <option value="wp">WP旁站</option>
+                        <option value="non_wp">非WP旁站</option>
+                    </select>
+                    <select class="form-control form-select" id="sidesite-component" onchange="filterSidesites()" style="width: 200px;">
+                        <option value="">全部组件</option>
+                        ${stats.components.map(c => `<option value="${c.name}">${c.plugin_name || c.name} (${c.count})</option>`).join('')}
+                    </select>
+                    <div class="dropdown" style="margin-left: auto;">
+                        <button class="btn btn-outline" onclick="toggleDropdown(this)">导出 ▾</button>
+                        <div class="dropdown-menu">
+                            <a href="#" onclick="exportSidesites('all'); return false;">导出全部旁站</a>
+                            <a href="#" onclick="exportSidesites('wp'); return false;">导出WP旁站</a>
+                            <a href="#" onclick="exportSidesites('non_wp'); return false;">导出非WP旁站</a>
+                            <a href="#" onclick="exportSidesitesByComponent(); return false;">导出当前筛选</a>
+                        </div>
+                    </div>
+                </div>
+
+                ${stats.components.length > 0 ? `
+                <div style="margin-bottom: 16px;">
+                    <strong>WP组件/插件统计:</strong>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                        ${stats.components.slice(0, 20).map(c => `
+                            <span class="badge badge-info" style="cursor: pointer;" onclick="filterByComponent('${c.name}')">
+                                ${c.plugin_name || c.name}: ${c.count}
+                            </span>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <div id="sidesite-list">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+                <div id="sidesite-pagination"></div>
+            `,
+            footer: `
+                <button class="btn btn-outline" onclick="modal.close()">关闭</button>
+            `,
+        });
+
+        loadSidesites();
+    } catch (error) {
+        toast.error(error.message);
+    }
+}
+
+async function loadSidesites() {
+    const filter = document.getElementById('sidesite-filter').value;
+    const component = document.getElementById('sidesite-component').value;
+
+    const params = {
+        project_id: currentSidesiteProjectId,
+        page: sidesitePage,
+        per_page: 15,
+    };
+
+    if (filter === 'wp') params.is_wp = 1;
+    else if (filter === 'non_wp') params.is_wp = 0;
+
+    if (component) params.component = component;
+
+    try {
+        const data = await api.get('/api/sidesites', params);
+        renderSidesiteList(data.items);
+        document.getElementById('sidesite-pagination').innerHTML = renderPagination(data.pagination, 'goSidesitePage');
+    } catch (error) {
+        document.getElementById('sidesite-list').innerHTML = `<div class="text-danger">加载失败: ${error.message}</div>`;
+    }
+}
+
+function renderSidesiteList(sidesites) {
+    if (!sidesites || sidesites.length === 0) {
+        document.getElementById('sidesite-list').innerHTML = '<div class="empty-state"><div class="empty-state-title">暂无旁站</div></div>';
+        return;
+    }
+
+    const html = `
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>域名</th>
+                    <th>IP</th>
+                    <th>WP</th>
+                    <th>组件数</th>
+                    <th>组件</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sidesites.map(s => `
+                    <tr>
+                        <td><a href="${s.protocol || 'https'}://${s.domain}" target="_blank">${s.domain}</a></td>
+                        <td>${s.ip || '-'}</td>
+                        <td>${s.is_wp === 1 ? '<span class="badge badge-success">是</span>' : s.is_wp === 0 ? '<span class="badge badge-gray">否</span>' : '<span class="badge badge-warning">未检测</span>'}</td>
+                        <td>${s.component_count || 0}</td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${s.components && s.components.length > 0 ? s.components.slice(0, 3).join(', ') + (s.components.length > 3 ? '...' : '') : '-'}
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    document.getElementById('sidesite-list').innerHTML = html;
+}
+
+function filterSidesites() {
+    sidesitePage = 1;
+    loadSidesites();
+}
+
+function filterByComponent(component) {
+    document.getElementById('sidesite-component').value = component;
+    document.getElementById('sidesite-filter').value = 'wp';
+    filterSidesites();
+}
+
+function goSidesitePage(page) {
+    sidesitePage = page;
+    loadSidesites();
+}
+
+function exportSidesites(type) {
+    const component = document.getElementById('sidesite-component').value;
+    let url = `/api/sidesites/project/${currentSidesiteProjectId}/export?type=${type}`;
+    if (component) url += `&component=${encodeURIComponent(component)}`;
+    window.open(url, '_blank');
+}
+
+function exportSidesitesByComponent() {
+    const type = document.getElementById('sidesite-filter').value;
+    const component = document.getElementById('sidesite-component').value;
+    let url = `/api/sidesites/project/${currentSidesiteProjectId}/export?type=${type === 'all' ? 'all' : type}`;
+    if (component) url += `&component=${encodeURIComponent(component)}`;
+    window.open(url, '_blank');
 }
 
 // 初始加载

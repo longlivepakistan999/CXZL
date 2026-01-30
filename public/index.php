@@ -49,6 +49,8 @@ $apiRoutes = [
     // 旁站
     'GET /api/sidesites' => ['App\\Controllers\\SidesiteController', 'index'],
     'GET /api/sidesites/{id}' => ['App\\Controllers\\SidesiteController', 'show'],
+    'GET /api/sidesites/project/{id}/stats' => ['App\\Controllers\\SidesiteController', 'projectStats'],
+    'GET /api/sidesites/project/{id}/export' => ['App\\Controllers\\SidesiteController', 'exportProject'],
     'POST /api/sidesites/{id}/scan' => ['App\\Controllers\\SidesiteController', 'scan'],
     'POST /api/sidesites/batch-scan' => ['App\\Controllers\\SidesiteController', 'batchScan'],
 
