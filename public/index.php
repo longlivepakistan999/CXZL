@@ -46,15 +46,15 @@ $apiRoutes = [
     'POST /api/assets/rescan-pending' => ['App\\Controllers\\AssetController', 'rescanPending'],
     'GET /api/assets/export-wp' => ['App\\Controllers\\AssetController', 'exportWpAssets'],
 
-    // 旁站
+    // 旁站 (注意: 具体路由必须在 {id} 通配路由之前)
     'GET /api/sidesites' => ['App\\Controllers\\SidesiteController', 'index'],
-    'GET /api/sidesites/{id}' => ['App\\Controllers\\SidesiteController', 'show'],
     'GET /api/sidesites/project/{id}/stats' => ['App\\Controllers\\SidesiteController', 'projectStats'],
     'GET /api/sidesites/project/{id}/export' => ['App\\Controllers\\SidesiteController', 'exportProject'],
     'GET /api/sidesites/asset/{id}/stats' => ['App\\Controllers\\SidesiteController', 'assetStats'],
     'GET /api/sidesites/asset/{id}/export' => ['App\\Controllers\\SidesiteController', 'exportAsset'],
-    'POST /api/sidesites/{id}/scan' => ['App\\Controllers\\SidesiteController', 'scan'],
     'POST /api/sidesites/batch-scan' => ['App\\Controllers\\SidesiteController', 'batchScan'],
+    'GET /api/sidesites/{id}' => ['App\\Controllers\\SidesiteController', 'show'],
+    'POST /api/sidesites/{id}/scan' => ['App\\Controllers\\SidesiteController', 'scan'],
 
     // 扫描任务
     'GET /api/tasks' => ['App\\Controllers\\TaskController', 'index'],
