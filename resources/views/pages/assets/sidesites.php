@@ -244,7 +244,7 @@ function renderSidesiteList(sidesites) {
         return;
     }
 
-    const assetIp = assetData?.ip || '';
+    const assetIp = (assetData?.ip || '').trim();
 
     const html = `
         <table class="table">
@@ -263,15 +263,15 @@ function renderSidesiteList(sidesites) {
             </thead>
             <tbody>
                 ${sidesites.map(s => {
-                    const ipMatch = s.ip && assetIp && s.ip === assetIp;
-                    const ipDiff = s.ip && assetIp && s.ip !== assetIp;
+                    const sideIp = (s.ip || '').trim();
+                    const ipMatch = sideIp && assetIp && sideIp === assetIp;
                     return `
                     <tr>
                         <td><a href="${s.protocol || 'https'}://${s.domain}" target="_blank">${s.domain}</a></td>
                         <td>${s.protocol || 'https'}</td>
-                        <td><code>${s.ip || '-'}</code></td>
+                        <td><code>${sideIp || '-'}</code></td>
                         <td>
-                            ${!s.ip ? '<span class="badge badge-gray">未知</span>' :
+                            ${!sideIp ? '<span class="badge badge-gray">未知</span>' :
                               ipMatch ? '<span class="badge badge-success">相同</span>' :
                               '<span class="badge badge-warning">不同</span>'}
                         </td>
@@ -347,8 +347,10 @@ function exportByComponent(component) {
 }
 
 // 初始加载
-document.addEventListener('DOMContentLoaded', function() {
-    loadAssetInfo();
+document.addEventListener('DOMContentLoaded', async function() {
+    // 先加载资产信息，确保 assetData 可用
+    await loadAssetInfo();
+    // 然后加载旁站列表
     loadSidesites();
 
     // 搜索回车
