@@ -273,7 +273,7 @@ function renderSidesiteList(sidesites) {
                         <td>
                             ${!sideIp ? '<span class="badge badge-gray">未知</span>' :
                               ipMatch ? '<span class="badge badge-success">相同</span>' :
-                              '<span class="badge badge-warning">不同</span>'}
+                              `<span class="badge badge-warning">不同</span><br><small class="text-muted">资产: ${assetIp}</small>`}
                         </td>
                         <td>
                             ${s.is_wp === 1 ? '<span class="badge badge-success">WP</span>' :
