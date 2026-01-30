@@ -1,137 +1,82 @@
 # CLAUDE.md - AI Assistant Guidelines for CXZL
 
-This document provides guidance for AI assistants working with the CXZL repository.
-
 ## Repository Overview
 
 - **Repository**: CXZL
 - **Owner**: longlivepakistan999
-- **Status**: New repository (initial setup)
+- **Status**: Initial setup - awaiting project implementation
 
 ## Project Structure
 
 ```
 CXZL/
-├── CLAUDE.md          # AI assistant guidelines (this file)
-└── (project files to be added)
+└── CLAUDE.md    # AI assistant guidelines (this file)
 ```
 
-As the project grows, update this section with the actual directory structure.
+*Update this section as files are added to the project.*
 
 ## Development Workflow
 
-### Branch Strategy
+### Branch Naming
 
-- **Main branch**: Primary stable branch
-- **Feature branches**: Use `feature/<name>` for new features
-- **Bug fixes**: Use `fix/<name>` for bug fixes
-- **Claude branches**: AI-assisted work uses `claude/` prefixed branches
+| Type | Pattern | Example |
+|------|---------|---------|
+| Features | `feature/<name>` | `feature/user-auth` |
+| Bug fixes | `fix/<name>` | `fix/login-error` |
+| AI-assisted | `claude/<name>` | `claude/implement-api` |
 
-### Commit Guidelines
+### Commit Format
 
-1. Write clear, descriptive commit messages
-2. Use conventional commit format when applicable:
-   - `feat:` for new features
-   - `fix:` for bug fixes
-   - `docs:` for documentation changes
-   - `refactor:` for code refactoring
-   - `test:` for adding tests
-   - `chore:` for maintenance tasks
+Use conventional commits:
+- `feat:` new features
+- `fix:` bug fixes
+- `docs:` documentation
+- `refactor:` code restructuring
+- `test:` test additions
+- `chore:` maintenance
 
-### Pull Request Process
+### Pull Requests
 
-1. Create a feature branch from main
-2. Make changes and commit
-3. Push to the remote repository
-4. Create a pull request with a clear description
-5. Address review feedback
+1. Branch from main
+2. Commit changes
+3. Push and create PR with clear description
+4. Address review feedback
 
 ## Code Conventions
 
-### General Principles
-
 - Keep code simple and readable
-- Follow the principle of least surprise
-- Write self-documenting code with clear naming
-- Add comments only when the logic isn't self-evident
-
-### File Organization
-
+- Use clear, descriptive naming
 - Group related functionality together
-- Use descriptive file and directory names
-- Keep files focused on a single responsibility
-
-## Commands Reference
-
-### Git Operations
-
-```bash
-# Check status
-git status
-
-# Create and switch to a new branch
-git checkout -b <branch-name>
-
-# Stage changes
-git add <file>
-
-# Commit changes
-git commit -m "message"
-
-# Push to remote
-git push -u origin <branch-name>
-```
-
-### (Add project-specific commands as they are established)
-
-## Testing
-
-*(Add testing instructions and commands as the project develops)*
-
-## Building
-
-*(Add build instructions as the project develops)*
-
-## Dependencies
-
-*(List project dependencies as they are added)*
-
-## Configuration
-
-*(Document configuration files and environment variables as needed)*
+- One responsibility per file
+- Comment only when logic isn't self-evident
 
 ## AI Assistant Guidelines
 
-### When Working on This Repository
+### Do
 
-1. **Read before modifying**: Always read existing code before making changes
-2. **Keep changes minimal**: Only make changes that are directly requested
-3. **Avoid over-engineering**: Don't add features beyond what's asked
-4. **Follow existing patterns**: Match the style of surrounding code
-5. **Test changes**: Verify changes work before committing
+- Read existing code before modifying
+- Make only requested changes
+- Follow existing patterns and style
+- Verify changes work before committing
 
-### What to Avoid
+### Don't
 
-- Don't introduce security vulnerabilities
-- Don't add unnecessary dependencies
-- Don't create files unless absolutely necessary
-- Don't add excessive comments or documentation
-- Don't make "improvements" that weren't requested
+- Introduce security vulnerabilities
+- Add unnecessary dependencies
+- Create files unless necessary
+- Over-engineer or add unrequested features
+- Add excessive comments or documentation
 
-### Common Tasks
+## Quick Reference
 
-When asked to work on this repository, common tasks may include:
-
-1. **Adding new features**: Implement functionality as specified
-2. **Fixing bugs**: Identify and resolve issues
-3. **Refactoring**: Improve code structure when requested
-4. **Documentation**: Update docs when explicitly asked
-
-## Troubleshooting
-
-*(Add common issues and solutions as they are discovered)*
+```bash
+git status                           # Check status
+git checkout -b <branch>             # New branch
+git add <file>                       # Stage changes
+git commit -m "type: message"        # Commit
+git push -u origin <branch>          # Push
+```
 
 ---
 
 *Last updated: 2026-01-30*
-*This document should be updated as the project evolves.*
