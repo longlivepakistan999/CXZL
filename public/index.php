@@ -102,14 +102,9 @@ $pageRoutes = [
     '/' => 'pages/dashboard/index.php',
     '/dashboard' => 'pages/dashboard/index.php',
     '/projects' => 'pages/projects/index.php',
-    '/projects/create' => 'pages/projects/create.php',
     '/projects/{id}' => 'pages/projects/detail.php',
     '/assets/{id}' => 'pages/assets/detail.php',
     '/tasks' => 'pages/tasks/index.php',
-    '/scheduled-tasks' => 'pages/tasks/scheduled.php',
-    '/failures' => 'pages/tasks/failures.php',
-    '/exports' => 'pages/exports/index.php',
-    '/tags' => 'pages/settings/tags.php',
     '/settings' => 'pages/settings/index.php',
 ];
 
@@ -167,12 +162,13 @@ if (strpos($uri, '/api/') === 0) {
 }
 
 // 处理页面请求
-$route = matchRoute('GET', $uri, array_combine(array_keys($pageRoutes), array_keys($pageRoutes)));
+foreach ($pageRoutes as $routePath => $viewFile) {
+    // 转换路由参数为正则
+    $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $routePath);
+    $pattern = '#^' . $pattern . '$#';
 
-if ($route) {
-    $viewFile = $pageRoutes[$route['handler']] ?? null;
-    if ($viewFile) {
-        $params = $route['params'];
+    if (preg_match($pattern, $uri, $matches)) {
+        $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
         include __DIR__ . '/../resources/views/' . $viewFile;
         exit;
     }
