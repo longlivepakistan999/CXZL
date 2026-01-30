@@ -265,13 +265,22 @@ class ScannerService
 
         foreach ($sidesites as $sidesite) {
             try {
+                // 解析旁站自己的IP
+                $sidesiteIp = null;
+                $dnsResult = DnsService::resolve($sidesite['domain']);
+                if ($dnsResult['success']) {
+                    $sidesiteIp = $dnsResult['ip'];
+                }
+
+                // WP检测
                 $protocol = $sidesite['protocol'] ?? 'https';
                 $wpResult = WordPressService::detect($sidesite['domain'], $protocol);
                 Sidesite::updateWpResult(
                     $sidesite['id'],
                     $wpResult['is_wp'],
                     $wpResult['components'],
-                    $wpResult['protocol'] ?? null // 保存实际工作的协议
+                    $wpResult['protocol'] ?? null,
+                    $sidesiteIp // 保存旁站自己的IP
                 );
             } catch (\Exception $e) {
                 Sidesite::markFailed($sidesite['id'], $e->getMessage());
@@ -297,13 +306,22 @@ class ScannerService
         }
 
         try {
+            // 解析旁站自己的IP
+            $sidesiteIp = null;
+            $dnsResult = DnsService::resolve($sidesite['domain']);
+            if ($dnsResult['success']) {
+                $sidesiteIp = $dnsResult['ip'];
+            }
+
+            // WP检测
             $protocol = $sidesite['protocol'] ?? 'https';
             $wpResult = WordPressService::detect($sidesite['domain'], $protocol);
             Sidesite::updateWpResult(
                 $sidesiteId,
                 $wpResult['is_wp'],
                 $wpResult['components'],
-                $wpResult['protocol'] ?? null // 保存实际工作的协议
+                $wpResult['protocol'] ?? null,
+                $sidesiteIp // 保存旁站自己的IP
             );
 
             return [
@@ -311,6 +329,7 @@ class ScannerService
                 'is_wp' => $wpResult['is_wp'],
                 'components' => $wpResult['components'],
                 'protocol' => $wpResult['protocol'] ?? $protocol,
+                'ip' => $sidesiteIp,
             ];
         } catch (\Exception $e) {
             Sidesite::markFailed($sidesiteId, $e->getMessage());
