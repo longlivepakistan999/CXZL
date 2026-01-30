@@ -187,15 +187,17 @@ async function prioritizeTask(id) {
 }
 
 // 初始加载
-loadProjects();
-loadStats();
-loadTasks();
-
-// 自动刷新
-setInterval(() => {
+document.addEventListener('DOMContentLoaded', function() {
+    loadProjects();
     loadStats();
-    loadTasks(currentPage);
-}, 10000);
+    loadTasks();
+
+    // 自动刷新
+    setInterval(() => {
+        loadStats();
+        loadTasks(currentPage);
+    }, 10000);
+});
 </script>
 
 <?php

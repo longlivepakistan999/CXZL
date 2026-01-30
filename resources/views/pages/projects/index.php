@@ -291,11 +291,13 @@ function batchDelete() {
 }
 
 // 初始加载
-loadProjects();
+document.addEventListener('DOMContentLoaded', function() {
+    loadProjects();
 
-// 搜索回车
-document.getElementById('search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') loadProjects();
+    // 搜索回车
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadProjects();
+    });
 });
 </script>
 

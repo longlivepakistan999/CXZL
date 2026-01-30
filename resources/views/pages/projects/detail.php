@@ -386,12 +386,14 @@ async function quickExport(type) {
 }
 
 // 初始加载
-loadProjectInfo();
-loadAssets();
+document.addEventListener('DOMContentLoaded', function() {
+    loadProjectInfo();
+    loadAssets();
 
-// 搜索回车
-document.getElementById('search-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') loadAssets();
+    // 搜索回车
+    document.getElementById('search-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') loadAssets();
+    });
 });
 </script>
 

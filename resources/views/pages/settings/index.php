@@ -156,7 +156,9 @@ async function updateCfIps() {
 }
 
 // 初始加载
-loadSettings();
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+});
 </script>
 
 <?php

@@ -196,10 +196,11 @@ function showActivityTab(tab) {
 }
 
 // 页面加载
-loadDashboard();
-
-// 每30秒刷新一次
-setInterval(loadDashboard, 30000);
+document.addEventListener('DOMContentLoaded', function() {
+    loadDashboard();
+    // 每30秒刷新一次
+    setInterval(loadDashboard, 30000);
+});
 </script>
 
 <?php

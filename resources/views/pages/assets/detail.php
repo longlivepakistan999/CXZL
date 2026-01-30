@@ -319,7 +319,9 @@ async function showComponentsModal(sidesiteId) {
 }
 
 // 初始加载
-loadAssetInfo();
+document.addEventListener('DOMContentLoaded', function() {
+    loadAssetInfo();
+});
 </script>
 
 <?php
