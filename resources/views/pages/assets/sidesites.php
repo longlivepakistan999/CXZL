@@ -52,12 +52,26 @@ ob_start();
     <div id="pagination"></div>
 </div>
 
-<!-- 组件统计 -->
+<!-- 插件/主题统计表格 -->
 <div class="card" id="component-stats-card" style="display: none;">
     <div class="card-header">
-        <h3 class="card-title">WP组件/插件统计</h3>
+        <h3 class="card-title">WP插件/主题统计</h3>
+        <span class="text-muted" id="wp-coverage-info"></span>
     </div>
-    <div class="card-body" id="component-list"></div>
+    <div class="card-body">
+        <table class="table" id="component-table">
+            <thead>
+                <tr>
+                    <th>插件/主题</th>
+                    <th>命名空间</th>
+                    <th>使用数量</th>
+                    <th>WP占比</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="component-list"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -147,6 +161,7 @@ async function loadSidesiteStats() {
 
         // 填充组件筛选
         componentData = stats.components || [];
+        const wpCount = stats.wp_count || 0;
         const componentSelect = document.getElementById('filter-component');
         componentSelect.innerHTML = '<option value="">全部组件</option>';
         componentData.forEach(c => {
@@ -154,18 +169,38 @@ async function loadSidesiteStats() {
             componentSelect.innerHTML += `<option value="${c.name}">${name} (${c.count})</option>`;
         });
 
-        // 显示组件统计
+        // 显示插件/主题统计表格
         if (componentData.length > 0) {
             document.getElementById('component-stats-card').style.display = 'block';
-            document.getElementById('component-list').innerHTML = `
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    ${componentData.map(c => `
-                        <span class="badge badge-info" style="cursor: pointer; padding: 8px 12px;" onclick="filterByComponent('${c.name}')">
-                            ${pluginNameMap[c.name] || c.name}: ${c.count}
-                        </span>
-                    `).join('')}
-                </div>
-            `;
+            document.getElementById('wp-coverage-info').textContent = `共 ${wpCount} 个WP旁站`;
+
+            document.getElementById('component-list').innerHTML = componentData.map(c => {
+                const name = pluginNameMap[c.name] || c.plugin_name || null;
+                const percentage = wpCount > 0 ? ((c.count / wpCount) * 100).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td>
+                            <strong>${name || '<span class="text-muted">未知插件</span>'}</strong>
+                        </td>
+                        <td><code>${c.name}</code></td>
+                        <td><strong>${c.count}</strong></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 100px; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                                    <div style="width: ${percentage}%; height: 100%; background: #3b82f6;"></div>
+                                </div>
+                                <span>${percentage}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline" onclick="filterByComponent('${c.name}')">查看</button>
+                            <button class="btn btn-sm btn-primary" onclick="exportByComponent('${c.name}')">导出</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            document.getElementById('component-stats-card').style.display = 'none';
         }
 
     } catch (error) {
@@ -292,6 +327,11 @@ function exportSidesites(type) {
     const component = document.getElementById('filter-component').value;
     let url = `/api/sidesites/asset/${assetId}/export?type=${type}`;
     if (component) url += `&component=${encodeURIComponent(component)}`;
+    window.open(url, '_blank');
+}
+
+function exportByComponent(component) {
+    const url = `/api/sidesites/asset/${assetId}/export?type=wp&component=${encodeURIComponent(component)}`;
     window.open(url, '_blank');
 }
 
