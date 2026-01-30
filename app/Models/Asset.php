@@ -11,7 +11,7 @@ class Asset extends BaseModel
     protected static string $table = 'assets';
 
     protected static array $fillable = [
-        'project_id', 'domain', 'ip', 'is_cf', 'is_wp', 'components', 'component_count',
+        'project_id', 'domain', 'protocol', 'ip', 'is_cf', 'is_wp', 'components', 'component_count',
         'sidesite_count', 'wp_sidesite_count', 'scan_status', 'scan_error', 'retry_count',
         'tags', 'remark', 'imported_at', 'scanned_at'
     ];
@@ -188,16 +188,27 @@ class Asset extends BaseModel
 
     /**
      * 批量导入资产
+     * 支持带协议的URL，如 https://example.com 或 http://example.com
      */
-    public static function batchImport(int $projectId, array $domains, bool $skipDuplicates = true, array $tagIds = []): array
+    public static function batchImport(int $projectId, array $urls, bool $skipDuplicates = true, array $tagIds = []): array
     {
         $imported = 0;
         $skipped = 0;
         $errors = [];
 
+        // 先解析所有URL，提取域名
+        $parsedUrls = [];
+        foreach ($urls as $url) {
+            $parsed = parseUrl($url);
+            if (!empty($parsed['domain'])) {
+                $parsedUrls[$parsed['domain']] = $parsed['protocol'];
+            }
+        }
+
         // 获取已存在的域名
         $existingDomains = [];
-        if ($skipDuplicates) {
+        if ($skipDuplicates && !empty($parsedUrls)) {
+            $domains = array_keys($parsedUrls);
             $placeholders = implode(',', array_fill(0, count($domains), '?'));
             $existing = Database::query(
                 "SELECT `domain` FROM `assets` WHERE `project_id` = ? AND `domain` IN ({$placeholders})",
@@ -210,9 +221,7 @@ class Asset extends BaseModel
         $insertData = [];
         $now = date('Y-m-d H:i:s');
 
-        foreach ($domains as $domain) {
-            $domain = cleanDomain($domain);
-
+        foreach ($parsedUrls as $domain => $protocol) {
             if (!isValidDomain($domain)) {
                 $errors[] = "无效域名: {$domain}";
                 continue;
@@ -226,6 +235,7 @@ class Asset extends BaseModel
             $insertData[] = [
                 'project_id' => $projectId,
                 'domain' => $domain,
+                'protocol' => $protocol,
                 'is_cf' => -1,
                 'is_wp' => -1,
                 'tags' => !empty($tagIds) ? json_encode($tagIds) : null,
@@ -237,7 +247,7 @@ class Asset extends BaseModel
 
         // 批量插入
         if (!empty($insertData)) {
-            $columns = ['project_id', 'domain', 'is_cf', 'is_wp', 'tags', 'imported_at', 'created_at', 'updated_at'];
+            $columns = ['project_id', 'domain', 'protocol', 'is_cf', 'is_wp', 'tags', 'imported_at', 'created_at', 'updated_at'];
             $imported = Database::batchInsert('assets', $columns, $insertData, 1000);
         }
 

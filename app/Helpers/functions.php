@@ -182,6 +182,41 @@ function cleanDomain(string $domain): string
 }
 
 /**
+ * 解析URL，提取域名和协议
+ * @return array ['domain' => string, 'protocol' => string]
+ */
+function parseUrl(string $url): array
+{
+    $url = trim($url);
+
+    // 提取协议
+    $protocol = 'https'; // 默认https
+    if (preg_match('#^(https?)://#i', $url, $matches)) {
+        $protocol = strtolower($matches[1]);
+    }
+
+    // 提取域名
+    $domain = preg_replace('#^https?://#i', '', $url);
+    $domain = explode('/', $domain)[0];
+    $domain = explode(':', $domain)[0];
+    $domain = strtolower($domain);
+
+    return [
+        'domain' => $domain,
+        'protocol' => $protocol,
+    ];
+}
+
+/**
+ * 构建完整URL
+ */
+function buildUrl(string $domain, string $protocol = 'https'): string
+{
+    $domain = cleanDomain($domain);
+    return "{$protocol}://{$domain}";
+}
+
+/**
  * 验证IP地址
  */
 function isValidIp(string $ip): bool

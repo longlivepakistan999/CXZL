@@ -11,7 +11,7 @@ class Sidesite extends BaseModel
     protected static string $table = 'sidesites';
 
     protected static array $fillable = [
-        'asset_id', 'project_id', 'domain', 'ip', 'is_wp', 'components',
+        'asset_id', 'project_id', 'domain', 'protocol', 'ip', 'is_wp', 'components',
         'component_count', 'scan_status', 'scan_error'
     ];
 
@@ -112,7 +112,7 @@ class Sidesite extends BaseModel
     /**
      * 批量插入旁站(带去重)
      */
-    public static function batchInsert(int $assetId, int $projectId, array $domains, string $ip = null): int
+    public static function batchInsert(int $assetId, int $projectId, array $domains, string $ip = null, string $defaultProtocol = 'https'): int
     {
         if (empty($domains)) {
             return 0;
@@ -120,10 +120,11 @@ class Sidesite extends BaseModel
 
         // 获取已存在的旁站
         $existingDomains = [];
-        $placeholders = implode(',', array_fill(0, count($domains), '?'));
+        $cleanDomains = array_map('cleanDomain', $domains);
+        $placeholders = implode(',', array_fill(0, count($cleanDomains), '?'));
         $existing = Database::query(
             "SELECT `domain` FROM `sidesites` WHERE `project_id` = ? AND `domain` IN ({$placeholders})",
-            array_merge([$projectId], $domains)
+            array_merge([$projectId], $cleanDomains)
         );
         $existingDomains = array_column($existing, 'domain');
 
@@ -132,16 +133,19 @@ class Sidesite extends BaseModel
         $now = date('Y-m-d H:i:s');
 
         foreach ($domains as $domain) {
-            $domain = cleanDomain($domain);
+            $parsed = parseUrl($domain);
+            $cleanedDomain = $parsed['domain'];
+            $protocol = $parsed['protocol'] ?: $defaultProtocol;
 
-            if (!isValidDomain($domain) || in_array($domain, $existingDomains)) {
+            if (!isValidDomain($cleanedDomain) || in_array($cleanedDomain, $existingDomains)) {
                 continue;
             }
 
             $insertData[] = [
                 'asset_id' => $assetId,
                 'project_id' => $projectId,
-                'domain' => $domain,
+                'domain' => $cleanedDomain,
+                'protocol' => $protocol,
                 'ip' => $ip,
                 'is_wp' => -1,
                 'scan_status' => self::STATUS_COMPLETED,
@@ -154,7 +158,7 @@ class Sidesite extends BaseModel
             return 0;
         }
 
-        $columns = ['asset_id', 'project_id', 'domain', 'ip', 'is_wp', 'scan_status', 'created_at', 'updated_at'];
+        $columns = ['asset_id', 'project_id', 'domain', 'protocol', 'ip', 'is_wp', 'scan_status', 'created_at', 'updated_at'];
         $inserted = Database::batchInsert('sidesites', $columns, $insertData, 1000);
 
         // 更新资产旁站统计

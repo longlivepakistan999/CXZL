@@ -17,10 +17,13 @@ class WordPressService
 
     /**
      * 检测是否为WordPress站点
+     * @param string $domain 域名
+     * @param string $protocol 协议 (http 或 https)
      */
-    public static function detect(string $domain): array
+    public static function detect(string $domain, string $protocol = 'https'): array
     {
         $domain = cleanDomain($domain);
+        $protocol = strtolower($protocol) === 'http' ? 'http' : 'https';
 
         $result = [
             'is_wp' => false,
@@ -28,13 +31,14 @@ class WordPressService
             'error' => null,
         ];
 
-        // 请求 /wp-json/
-        $wpJsonUrl = "https://{$domain}/wp-json/";
+        // 请求 /wp-json/，优先使用指定的协议
+        $wpJsonUrl = "{$protocol}://{$domain}/wp-json/";
         $response = static::httpGet($wpJsonUrl);
 
-        // 如果HTTPS失败,尝试HTTP
+        // 如果指定协议失败,尝试另一个协议
         if ($response === false) {
-            $wpJsonUrl = "http://{$domain}/wp-json/";
+            $altProtocol = $protocol === 'https' ? 'http' : 'https';
+            $wpJsonUrl = "{$altProtocol}://{$domain}/wp-json/";
             $response = static::httpGet($wpJsonUrl);
         }
 
@@ -95,13 +99,22 @@ class WordPressService
 
     /**
      * 批量检测
+     * @param array $assets 资产数组，每个元素可以是 string(域名) 或 array['domain' => string, 'protocol' => string]
      */
-    public static function batchDetect(array $domains, int $interval = 1): array
+    public static function batchDetect(array $assets, int $interval = 1): array
     {
         $results = [];
 
-        foreach ($domains as $domain) {
-            $results[$domain] = static::detect($domain);
+        foreach ($assets as $asset) {
+            if (is_array($asset)) {
+                $domain = $asset['domain'];
+                $protocol = $asset['protocol'] ?? 'https';
+            } else {
+                $domain = $asset;
+                $protocol = 'https';
+            }
+
+            $results[$domain] = static::detect($domain, $protocol);
 
             // 请求间隔
             if ($interval > 0) {
@@ -162,14 +175,16 @@ class WordPressService
     /**
      * 获取WP站点详细信息
      */
-    public static function getWpInfo(string $domain): ?array
+    public static function getWpInfo(string $domain, string $protocol = 'https'): ?array
     {
         $domain = cleanDomain($domain);
-        $wpJsonUrl = "https://{$domain}/wp-json/";
+        $protocol = strtolower($protocol) === 'http' ? 'http' : 'https';
+        $wpJsonUrl = "{$protocol}://{$domain}/wp-json/";
 
         $response = static::httpGet($wpJsonUrl);
         if ($response === false) {
-            $wpJsonUrl = "http://{$domain}/wp-json/";
+            $altProtocol = $protocol === 'https' ? 'http' : 'https';
+            $wpJsonUrl = "{$altProtocol}://{$domain}/wp-json/";
             $response = static::httpGet($wpJsonUrl);
         }
 

@@ -69,7 +69,8 @@ class ScannerService
             }
 
             // 4. WP检测(本站)
-            $wpResult = WordPressService::detect($asset['domain']);
+            $protocol = $asset['protocol'] ?? 'https';
+            $wpResult = WordPressService::detect($asset['domain'], $protocol);
             $result['is_wp'] = $wpResult['is_wp'];
             $result['components'] = $wpResult['components'];
 
@@ -230,7 +231,8 @@ class ScannerService
             return ['success' => false, 'error' => '资产不存在'];
         }
 
-        $wpResult = WordPressService::detect($asset['domain']);
+        $protocol = $asset['protocol'] ?? 'https';
+        $wpResult = WordPressService::detect($asset['domain'], $protocol);
 
         Asset::update($assetId, [
             'is_wp' => $wpResult['is_wp'] ? 1 : 0,
@@ -261,7 +263,8 @@ class ScannerService
 
         foreach ($sidesites as $sidesite) {
             try {
-                $wpResult = WordPressService::detect($sidesite['domain']);
+                $protocol = $sidesite['protocol'] ?? 'https';
+                $wpResult = WordPressService::detect($sidesite['domain'], $protocol);
                 Sidesite::updateWpResult(
                     $sidesite['id'],
                     $wpResult['is_wp'],
@@ -291,7 +294,8 @@ class ScannerService
         }
 
         try {
-            $wpResult = WordPressService::detect($sidesite['domain']);
+            $protocol = $sidesite['protocol'] ?? 'https';
+            $wpResult = WordPressService::detect($sidesite['domain'], $protocol);
             Sidesite::updateWpResult($sidesiteId, $wpResult['is_wp'], $wpResult['components']);
 
             return [
