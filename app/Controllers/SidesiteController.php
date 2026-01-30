@@ -18,18 +18,24 @@ class SidesiteController extends BaseController
     {
         list($page, $perPage) = $this->getPagination();
 
-        $filters = [
-            'asset_id' => inputInt('asset_id'),
-            'project_id' => inputInt('project_id'),
-            'is_wp' => input('is_wp'),
-            'scan_status' => input('scan_status'),
-            'component' => input('component'),
-            'search' => input('search'),
-        ];
+        $filters = [];
 
-        $filters = array_filter($filters, function ($v) {
-            return $v !== null && $v !== '';
-        });
+        // 整数过滤器 - 0 表示未设置
+        $assetId = inputInt('asset_id');
+        $projectId = inputInt('project_id');
+        if ($assetId > 0) $filters['asset_id'] = $assetId;
+        if ($projectId > 0) $filters['project_id'] = $projectId;
+
+        // 字符串过滤器
+        $isWp = input('is_wp');
+        $scanStatus = input('scan_status');
+        $component = input('component');
+        $search = input('search');
+
+        if ($isWp !== null && $isWp !== '') $filters['is_wp'] = $isWp;
+        if ($scanStatus !== null && $scanStatus !== '') $filters['scan_status'] = $scanStatus;
+        if ($component) $filters['component'] = $component;
+        if ($search) $filters['search'] = $search;
 
         $sidesites = Sidesite::getList($filters, $page, $perPage);
         $total = Sidesite::countByFilters($filters);
