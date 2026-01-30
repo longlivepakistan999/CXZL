@@ -189,6 +189,7 @@ function renderAssetList(assets) {
                         <td>
                             <div class="table-actions">
                                 <a href="/assets/${a.id}" class="btn btn-sm btn-outline">详情</a>
+                                <a href="/assets/${a.id}/sidesites" class="btn btn-sm btn-outline" ${a.sidesite_count > 0 ? '' : 'disabled'}>旁站</a>
                                 <button class="btn btn-sm btn-primary" onclick="scanAsset(${a.id})">扫描</button>
                                 <button class="btn btn-sm btn-danger" onclick="deleteAsset(${a.id})">删除</button>
                             </div>

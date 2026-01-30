@@ -51,6 +51,8 @@ $apiRoutes = [
     'GET /api/sidesites/{id}' => ['App\\Controllers\\SidesiteController', 'show'],
     'GET /api/sidesites/project/{id}/stats' => ['App\\Controllers\\SidesiteController', 'projectStats'],
     'GET /api/sidesites/project/{id}/export' => ['App\\Controllers\\SidesiteController', 'exportProject'],
+    'GET /api/sidesites/asset/{id}/stats' => ['App\\Controllers\\SidesiteController', 'assetStats'],
+    'GET /api/sidesites/asset/{id}/export' => ['App\\Controllers\\SidesiteController', 'exportAsset'],
     'POST /api/sidesites/{id}/scan' => ['App\\Controllers\\SidesiteController', 'scan'],
     'POST /api/sidesites/batch-scan' => ['App\\Controllers\\SidesiteController', 'batchScan'],
 
@@ -117,6 +119,7 @@ $pageRoutes = [
     '/projects' => 'pages/projects/index.php',
     '/projects/{id}' => 'pages/projects/detail.php',
     '/assets/{id}' => 'pages/assets/detail.php',
+    '/assets/{id}/sidesites' => 'pages/assets/sidesites.php',
     '/tasks' => 'pages/tasks/index.php',
     '/scheduled-tasks' => 'pages/tasks/scheduled.php',
     '/failures' => 'pages/tasks/failures.php',
