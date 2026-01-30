@@ -270,7 +270,8 @@ class ScannerService
                 Sidesite::updateWpResult(
                     $sidesite['id'],
                     $wpResult['is_wp'],
-                    $wpResult['components']
+                    $wpResult['components'],
+                    $wpResult['protocol'] ?? null // 保存实际工作的协议
                 );
             } catch (\Exception $e) {
                 Sidesite::markFailed($sidesite['id'], $e->getMessage());
@@ -298,12 +299,18 @@ class ScannerService
         try {
             $protocol = $sidesite['protocol'] ?? 'https';
             $wpResult = WordPressService::detect($sidesite['domain'], $protocol);
-            Sidesite::updateWpResult($sidesiteId, $wpResult['is_wp'], $wpResult['components']);
+            Sidesite::updateWpResult(
+                $sidesiteId,
+                $wpResult['is_wp'],
+                $wpResult['components'],
+                $wpResult['protocol'] ?? null // 保存实际工作的协议
+            );
 
             return [
                 'success' => true,
                 'is_wp' => $wpResult['is_wp'],
                 'components' => $wpResult['components'],
+                'protocol' => $wpResult['protocol'] ?? $protocol,
             ];
         } catch (\Exception $e) {
             Sidesite::markFailed($sidesiteId, $e->getMessage());

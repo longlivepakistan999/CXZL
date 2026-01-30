@@ -24,10 +24,12 @@ class WordPressService
     {
         $domain = cleanDomain($domain);
         $protocol = strtolower($protocol) === 'http' ? 'http' : 'https';
+        $workingProtocol = $protocol;
 
         $result = [
             'is_wp' => false,
             'components' => [],
+            'protocol' => $protocol, // 返回实际工作的协议
             'error' => null,
         ];
 
@@ -40,7 +42,12 @@ class WordPressService
             $altProtocol = $protocol === 'https' ? 'http' : 'https';
             $wpJsonUrl = "{$altProtocol}://{$domain}/wp-json/";
             $response = static::httpGet($wpJsonUrl);
+            if ($response !== false) {
+                $workingProtocol = $altProtocol;
+            }
         }
+
+        $result['protocol'] = $workingProtocol;
 
         if ($response === false) {
             $result['error'] = '无法连接到目标站点';

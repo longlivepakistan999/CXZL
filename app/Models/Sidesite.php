@@ -170,7 +170,7 @@ class Sidesite extends BaseModel
     /**
      * 更新旁站WP检测结果
      */
-    public static function updateWpResult(int $sidesiteId, bool $isWp, array $components = []): void
+    public static function updateWpResult(int $sidesiteId, bool $isWp, array $components = [], ?string $protocol = null): void
     {
         $updateData = [
             'is_wp' => $isWp ? 1 : 0,
@@ -178,6 +178,11 @@ class Sidesite extends BaseModel
             'component_count' => $isWp ? count($components) : 0,
             'scan_status' => self::STATUS_COMPLETED,
         ];
+
+        // 更新实际工作的协议
+        if ($protocol) {
+            $updateData['protocol'] = $protocol;
+        }
 
         static::update($sidesiteId, $updateData);
 
