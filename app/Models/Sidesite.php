@@ -146,9 +146,9 @@ class Sidesite extends BaseModel
                 'project_id' => $projectId,
                 'domain' => $cleanedDomain,
                 'protocol' => $protocol,
-                'ip' => $ip,
+                'ip' => null, // 旁站IP需要单独解析，不继承资产IP
                 'is_wp' => -1,
-                'scan_status' => self::STATUS_COMPLETED,
+                'scan_status' => 0, // 未扫描
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
