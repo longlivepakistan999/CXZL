@@ -244,13 +244,16 @@ function renderSidesiteList(sidesites) {
         return;
     }
 
+    const assetIp = assetData?.ip || '';
+
     const html = `
         <table class="table">
             <thead>
                 <tr>
                     <th>域名</th>
                     <th>协议</th>
-                    <th>IP</th>
+                    <th>IP地址</th>
+                    <th>IP匹配</th>
                     <th>WP状态</th>
                     <th>扫描状态</th>
                     <th>组件数</th>
@@ -259,11 +262,19 @@ function renderSidesiteList(sidesites) {
                 </tr>
             </thead>
             <tbody>
-                ${sidesites.map(s => `
+                ${sidesites.map(s => {
+                    const ipMatch = s.ip && assetIp && s.ip === assetIp;
+                    const ipDiff = s.ip && assetIp && s.ip !== assetIp;
+                    return `
                     <tr>
                         <td><a href="${s.protocol || 'https'}://${s.domain}" target="_blank">${s.domain}</a></td>
                         <td>${s.protocol || 'https'}</td>
-                        <td>${s.ip || '-'}</td>
+                        <td><code>${s.ip || '-'}</code></td>
+                        <td>
+                            ${!s.ip ? '<span class="badge badge-gray">未知</span>' :
+                              ipMatch ? '<span class="badge badge-success">相同</span>' :
+                              '<span class="badge badge-warning">不同</span>'}
+                        </td>
                         <td>
                             ${s.is_wp === 1 ? '<span class="badge badge-success">WP</span>' :
                               s.is_wp === 0 ? '<span class="badge badge-gray">非WP</span>' :
@@ -284,7 +295,7 @@ function renderSidesiteList(sidesites) {
                             <button class="btn btn-sm btn-primary" onclick="scanSidesite(${s.id})">扫描</button>
                         </td>
                     </tr>
-                `).join('')}
+                `}).join('')}
             </tbody>
         </table>
     `;
